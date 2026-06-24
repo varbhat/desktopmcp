@@ -1,0 +1,112 @@
+[package]
+name = "desktopmcp"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Varsh <mailvarbhat@gmail.com>"]
+description = "MCP server for the Linux desktop"
+license = "MIT"
+repository = "https://github.com/varbhat/desktopmcp"
+keywords = ["mcp", "xdg-portal", "desktop-automation", "ai", "accessibility", "linux", "gnome", "kde"]
+categories = ["api-bindings", "gui"]
+
+[dependencies]
+# MCP Server
+rmcp = { version = "1.7", features = [
+    "server",
+    "transport-io",                        # stdio
+    "transport-streamable-http-server",    # HTTP/SSE
+] }
+
+# XDG Desktop Portals
+ashpd = { version = "0.13", features = [
+    "account",
+    "background",
+    "camera",
+    "clipboard",
+    "dynamic_launcher",
+    "email",
+    "file_chooser",
+    "game_mode",
+    "global_shortcuts",
+    "inhibit",
+    "location",
+    "memory_monitor",
+    "network_monitor",
+    "notification",
+    "open_uri",
+    "power_profile_monitor",
+    "print",
+    "proxy_resolver",
+    "remote_desktop",
+    "screencast",
+    "screenshot",
+    "secret",
+    "settings",
+    "trash",
+    "wallpaper",
+    "tokio",
+] }
+
+# PipeWire (for ScreenCast frame capture)
+pipewire = "0.10"
+
+# Image processing
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1"
+
+# Base64 encoding (for image content in MCP)
+base64 = "0.22"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# UUID for session IDs
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# XML parsing for D-Bus introspection
+roxmltree = "0.20"
+
+# zbus and zvariant - D-Bus bindings (used directly for the dbus bridge)
+zbus = { version = "5", features = ["tokio"] }
+zvariant = "5"
+
+# Recursive async functions (needed for UI tree traversal)
+async-recursion = "1"
+
+# Stream extension for AT-SPI event stream
+tokio-stream = "0.1"
+
+# Futures utilities (for clipboard stream handling)
+futures-util = "0.3"
+
+# HTTP server (for HTTP/SSE transport)
+axum = "0.8"
+tower = "0.5"
+tokio-util = "0.7"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[[bin]]
+name = "desktopmcp"
+path = "src/main.rs"
+
+[[bin]]
+name = "debug-portals"
+path = "src/bin/debug_portals.rs"

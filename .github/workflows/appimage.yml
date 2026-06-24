@@ -1,0 +1,53 @@
+name: Build AppImage
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Extract version
+        id: version
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          timestamp=$(date +%s)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "timestamp=$timestamp" >> "$GITHUB_OUTPUT"
+          echo "filename=desktopmcp-v${version}-${timestamp}.AppImage" >> "$GITHUB_OUTPUT"
+
+      - name: Build AppImage
+        run: nix bundle --bundler github:ralismark/nix-appimage .
+
+      - name: Rename AppImage
+        run: mv desktopmcp.AppImage "${{ steps.version.outputs.filename }}"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}-${{ steps.version.outputs.timestamp }}
+          name: desktopmcp v${{ steps.version.outputs.version }}-${{ steps.version.outputs.timestamp }}
+          body: |
+            Automated AppImage build from commit ${{ github.sha }}.
+
+            Download and run:
+            ```bash
+            chmod +x ${{ steps.version.outputs.filename }}
+            ./${{ steps.version.outputs.filename }}
+            ```
+
+            This's built using [nix-appimage](https://github.com/ralismark/nix-appimage) which bundles the nix derivation and all its dependencies into a single-file executable, and hence the size of the AppImage is very big (It's something we'll optimize in upcoming releases—but hey, it lets you try it!).
+          files: ${{ steps.version.outputs.filename }}
